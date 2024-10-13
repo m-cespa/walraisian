@@ -71,12 +71,26 @@ class FacebookLogin:
             )
             login_button.click()
             print("Login button pressed")
-            
+    
+    def start_scrape(self, time_interval):
+        '''
+        Initialises the scraping of the facebook group, updates the database of request objects, checking for any new posts and adding them to the database
+        it should also update the market buy/sell price and update any transactions that have been made every time step
 
-
+        args:
+        time_interval(bool) : sets the time interval between scrapes 
+        '''
+        if self.open: 
+            NotImplementedError
+    def stop_scrape(self):
+        '''
+        Stops the scraping of the group
+        '''
+        NotImplementedError
+        
 # Usage example
 if __name__ == "__main__":
-    fb_login = FacebookLogin("/Users/michele/Desktop/Documents-Local/Programming/TicketBridgeTrading/chromedriver-mac-arm64/chromedriver")
+    fb_login = FacebookLogin("/Users/seanlim/Walraisian/apps/backend/scripts/chromedriver")
     fb_login.open_facebook("https://www.facebook.com/groups/1048169057102684/")
     fb_login.login("robersloane129@gmail.com", "xv4VfBS5T64;Mq8")
     input("Press Enter to close the browser...")
