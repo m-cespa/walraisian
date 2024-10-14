@@ -1,5 +1,5 @@
 class TicketRequest:
-    def __init__(self, timeID, userID, club, buy_or_sell, status, ticket_quantity,price="market"):
+    def __init__(self, club, timeID, userID, buy_or_sell, status, ticket_quantity,price="market"):
         """
         Initialize a transaction object representing a user's ticket transaction.
 
@@ -12,9 +12,9 @@ class TicketRequest:
             ticket_quantity (int): The number of tickets involved in the transaction.
             price (float) : The asking/selling price of the ticket, if none, will get the market price from the resolve_price method
         """
+        self.club = club
         self.timeID = timeID
         self.userID = userID
-        self.club = club
         self.buy_or_sell = buy_or_sell
         self.status = status
         self.ticket_quantity = ticket_quantity
