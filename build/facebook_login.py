@@ -4,7 +4,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
-
+import requests_class
 class FacebookLogin:
     def __init__(self, chromedriver_path):
         # Set Chrome options to disable notifications
@@ -15,7 +15,8 @@ class FacebookLogin:
         self.service = Service(chromedriver_path)
         self.driver = webdriver.Chrome(service=self.service, options=chrome_options)  
         self.open = False
-
+        self.scraping = False
+        self.requests = {}
     def open_facebook(self, url):
         # Open the Facebook login page
         self.driver.get(url)
@@ -71,26 +72,57 @@ class FacebookLogin:
             )
             login_button.click()
             print("Login button pressed")
-    
-    def start_scrape(self, time_interval):
-        '''
-        Initialises the scraping of the facebook group, updates the database of request objects, checking for any new posts and adding them to the database
-        it should also update the market buy/sell price and update any transactions that have been made every time step
 
-        args:
-        time_interval(bool) : sets the time interval between scrapes 
+
+            self.scrape_instance()
+    
+    
+    def scrape_instance(self):
         '''
-        if self.open: 
-            NotImplementedError
-    def stop_scrape(self):
+        Scrapes posts and stores them as request objects in the set self.requests
         '''
-        Stops the scraping of the group
-        '''
-        NotImplementedError
+        wait = WebDriverWait(self.driver, 5)  # Wait for up to 10 seconds
+        self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        time.sleep(1)  # Allow time for the page to load after scrolling
+
+        try:
+            
+
+            # XPath
+            xpath = #TODO having some trouble finding the right xpath
+
+            # Use the wait to find elements
+            elements = wait.until(EC.presence_of_all_elements_located(
+                (By.XPATH, xpath)
+            ))
+            print(f"Found {len(elements)} elements.")
+            
+            for element in elements:
+                link = element.get_attribute("href")  # Get the link URL
+                if link:  # Only proceed if the link exists
+                    # Open the link in a new tab
+                    self.driver.execute_script(f"window.open('{link}', '_blank');")
+                    time.sleep(2)  # Allow time for the new tab to load
+
+                    # Switch to the new tab
+                    self.driver.switch_to.window(self.driver.window_handles[-1])
+
+                    # Scrape the desired information from the post
+
+                    # Close the new tab
+                    self.driver.close()
+
+                    # Switch back to the original tab
+                    self.driver.switch_to.window(self.driver.window_handles[0])
+
+        except Exception as e:
+            print(f"An error occurred: {e}")
+
         
+
 # Usage example
 if __name__ == "__main__":
-    fb_login = FacebookLogin("/Users/seanlim/Walraisian/apps/backend/scripts/chromedriver")
+    fb_login = FacebookLogin("/Users/seanlim/Camb /walraisian/chromedriver")
     fb_login.open_facebook("https://www.facebook.com/groups/1048169057102684/")
     fb_login.login("robersloane129@gmail.com", "xv4VfBS5T64;Mq8")
     input("Press Enter to close the browser...")
