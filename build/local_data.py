@@ -84,8 +84,8 @@ class Tree:
             n = self.hash_map[club]['sell_size']
             m = self.hash_map[club]['buy_size']
 
-            sellers_remove = []
-            buyers_remove = []
+            sellers_remove = set()
+            buyers_remove = set()
 
             i = 0
             j = 0
@@ -113,8 +113,10 @@ class Tree:
                             matches.append((current_seller, current_buyer))
 
                             if current_buyer.ticket_quantity == 0:
+                                buyers_remove.add(j)
                                 j += 1  # advance buyer pointer if exhausted
                             if current_seller.ticket_quantity == 0:
+                                sellers_remove.add(i)
                                 i += 1  # advance seller pointer if exhausted
                                 break
                         else:
@@ -122,6 +124,7 @@ class Tree:
 
                     # check seller is exhausted before moving to next
                     if current_seller.ticket_quantity == 0:
+                        sellers_remove.add(i)
                         i += 1
 
             for seller_to_remove in sellers_remove:
@@ -131,7 +134,7 @@ class Tree:
             for buyer_to_remove in buyers_remove:
                 self.hash_map[club]['buy_size'] -= 1
                 self.hash_map[club]['buy'].pop(buyer_to_remove)
-                
+
         return matches
                             
 
