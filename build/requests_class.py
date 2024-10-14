@@ -13,9 +13,9 @@ class TicketRequest:
             price (float) : The asking/selling price of the ticket, if none, will get the market price from the resolve_price method
         """
         self.club = club
+        self.buy_or_sell = buy_or_sell
         self.timeID = timeID
         self.userID = userID
-        self.buy_or_sell = buy_or_sell
         self.status = status
         self.ticket_quantity = ticket_quantity
         self.price = self.resolve_price(price)
