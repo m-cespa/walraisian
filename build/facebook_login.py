@@ -4,7 +4,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
-import requests_class
+from bs4 import BeautifulSoup
+
 class FacebookLogin:
     def __init__(self, chromedriver_path):
         # Set Chrome options to disable notifications
@@ -15,8 +16,9 @@ class FacebookLogin:
         self.service = Service(chromedriver_path)
         self.driver = webdriver.Chrome(service=self.service, options=chrome_options)  
         self.open = False
-        self.scraping = False
-        self.requests = {}
+
+        self.name_class = "x1i10hfl xjbqb8w x1ejq31n xd10rxx x1sy0etr x17r0tee x972fbf xcfux6l x1qhh985 xm0m39n x9f619 x1ypdohk xt0psk2 xe8uvvx xdj266r x11i5rnm xat24cr x1mh8g0r xexx8yu x4uap5 x18d9i69 xkhd6sd x16tdsg8 x1hl2dhg xggy1nq x1a2a7pz x1sur9pj xkrqix3 xzsf02u x1s688f"
+        self.post_text_class = "xdj266r x11i5rnm xat24cr x1mh8g0r x1vvkbs"
     def open_facebook(self, url):
         # Open the Facebook login page
         self.driver.get(url)
@@ -72,58 +74,60 @@ class FacebookLogin:
             )
             login_button.click()
             print("Login button pressed")
-
-
-            self.scrape_instance()
     
     
     def scrape_instance(self):
         '''
-        Scrapes posts and stores them as request objects in the set self.requests
+        Scrapes posts from a Facebook group and stores them in a dictionary
         '''
-        wait = WebDriverWait(self.driver, 5)  # Wait for up to 10 seconds
+        # Wait for the page to load initial content
+        WebDriverWait(self.driver, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, "div[role='main']"))
+        )
+
+        # Scroll to load more content (adjust as needed)
         self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        time.sleep(1)  # Allow time for the page to load after scrolling
+        time.sleep(2)  # Wait for new content to load
 
-        try:
-            
+        # Get the page source after scrolling and waiting
+        page_source = self.driver.page_source
 
-            # XPath
-            xpath = #TODO having some trouble finding the right xpath
+        # Create a BeautifulSoup object
+        soup = BeautifulSoup(page_source, 'html.parser')
 
-            # Use the wait to find elements
-            elements = wait.until(EC.presence_of_all_elements_located(
-                (By.XPATH, xpath)
-            ))
-            print(f"Found {len(elements)} elements.")
-            
-            for element in elements:
-                link = element.get_attribute("href")  # Get the link URL
-                if link:  # Only proceed if the link exists
-                    # Open the link in a new tab
-                    self.driver.execute_script(f"window.open('{link}', '_blank');")
-                    time.sleep(2)  # Allow time for the new tab to load
+        # Initialize the dictionary to store scraped posts
+        scraped_posts = {}
 
-                    # Switch to the new tab
-                    self.driver.switch_to.window(self.driver.window_handles[-1])
+        # Find all post containers
+        posts = soup.find_all('div', class_="x1yztbdb x1n2onr6 xh8yej3 x1ja2u2z")
 
-                    # Scrape the desired information from the post
+        for index, post in enumerate(posts):
+            # Extract post information
+            author_element = post.find('a', class_=self.name_class)
+            text_element = post.find('div', class_=self.post_text_class)
 
-                    # Close the new tab
-                    self.driver.close()
+            # Extract text content, handling potential None values
+            author = author_element.text if author_element else "Unknown Author"
+            post_text = text_element.text if text_element else "No Text"
 
-                    # Switch back to the original tab
-                    self.driver.switch_to.window(self.driver.window_handles[0])
+            # Store the extracted information in the dictionary
+            scraped_posts[index] = {
+                "author": author,
+                "text": post_text
+            }
 
-        except Exception as e:
-            print(f"An error occurred: {e}")
+        # Store the scraped posts in the instance variable
+        self.scraped_posts = scraped_posts
 
-        
+        print(f"Scraping completed. {len(scraped_posts)} posts found.")
 
-# Usage example
+
+    # Usage example
 if __name__ == "__main__":
     fb_login = FacebookLogin("/Users/seanlim/Camb /walraisian/chromedriver")
     fb_login.open_facebook("https://www.facebook.com/groups/1048169057102684/")
     fb_login.login("robersloane129@gmail.com", "xv4VfBS5T64;Mq8")
+    fb_login.scrape_instance()
+    print(fb_login.scraped_posts)
     input("Press Enter to close the browser...")
     fb_login.close_browser()
