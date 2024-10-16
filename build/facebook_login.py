@@ -4,6 +4,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
+from bs4 import BeautifulSoup
 from selenium.common.exceptions import NoSuchElementException
 
 class FacebookLogin:
@@ -109,12 +110,10 @@ class FacebookLogin:
             except NoSuchElementException:
                 post_text = "No Text"
 
-            try:
             # Store the extracted information in the dictionary
             scraped_posts[index] = {
                 "author": author,
                 "text": post_text
-                "timestamp" : post_timestamp
             }
 
         # Store the scraped posts in the instance variable
