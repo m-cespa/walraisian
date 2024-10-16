@@ -28,5 +28,15 @@ class TicketRequest:
                 NotImplementedError # implement logic for calculating the market price
         return price
     
+    def __eq__(self,other):
+        # Check if the other object is of the same class and compare attributes
+        if isinstance(other,TicketRequest):
+            return (self.club == other.club and 
+                    self.buy_or_sell == other.buy_or_sell and
+                    self.timeID == other.timeID and
+                    self.ticket_quantity == other.ticket_quantity and
+                    self.price == other.price)
+        return False
+    
     
 
