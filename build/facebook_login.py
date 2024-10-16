@@ -5,8 +5,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
 from bs4 import BeautifulSoup
-from selenium.common.exceptions import NoSuchElementException
-
+import datetime
 class FacebookLogin:
     def __init__(self, chromedriver_path):
         # Set Chrome options to disable notifications
@@ -90,30 +89,32 @@ class FacebookLogin:
         self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
         time.sleep(2)  # Wait for new content to load
 
+        # Get the page source after scrolling and waiting
+        page_source = self.driver.page_source
+
+        # Create a BeautifulSoup object
+        soup = BeautifulSoup(page_source, 'html.parser')
+
         # Initialize the dictionary to store scraped posts
         scraped_posts = {}
 
         # Find all post containers
-        posts = self.driver.find_elements(By.CSS_SELECTOR, 'div.x1yztbdb.x1n2onr6.xh8yej3.x1ja2u2z')
+        posts = soup.find_all('div', class_="x1yztbdb x1n2onr6 xh8yej3 x1ja2u2z")
 
         for index, post in enumerate(posts):
             # Extract post information
-            try:
-                author_element = post.find_element(By.CSS_SELECTOR, f'a.{self.name_class}')
-                author = author_element.text
-            except NoSuchElementException:
-                author = "Unknown Author"
-            
-            try:
-                text_element = post.find_element(By.CSS_SELECTOR, f'div.{self.post_text_class}')
-                post_text = text_element.text
-            except NoSuchElementException:
-                post_text = "No Text"
+            author_element = post.find('a', class_=self.name_class)
+            text_element = post.find('div', class_=self.post_text_class)
+
+            # Extract text content, handling potential None values
+            author = author_element.text if author_element else "Unknown Author"
+            post_text = text_element.text if text_element else "No Text"
 
             # Store the extracted information in the dictionary
             scraped_posts[index] = {
                 "author": author,
-                "text": post_text
+                "text": post_text,
+                "scraped time" : datetime.datetime.now(datetime.timezone.utc).isoformat()
             }
 
         # Store the scraped posts in the instance variable
