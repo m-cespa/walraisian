@@ -19,6 +19,10 @@ class FacebookLogin:
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_argument("--disable-notifications")  # Disable notifications
 
+        # change profile path for testing 
+        profile_path = "/Users/seanlim/Library/Application Support/Google/Chrome/Profile 1"
+        chrome_options.add_argument(f"user-data-dir={profile_path}")
+
         # Initialize the webdriver with options and open the browser
         self.service = Service(chromedriver_path)
         self.driver = webdriver.Chrome(service=self.service, options=chrome_options)  
@@ -88,14 +92,19 @@ class FacebookLogin:
         '''
         Scrapes posts from a Facebook group and stores them in a dictionary
         '''
-        # Wait for the page to load initial content
-        WebDriverWait(self.driver, 10).until(
+        
+        # Go to ticketbridge page
+        self.driver.get("https://www.facebook.com/groups/257070261826425/")
+        
+        # Wait for the page to load initial content manually enter capchas 
+        WebDriverWait(self.driver, 30).until(
             EC.presence_of_element_located((By.CSS_SELECTOR, "div[role='main']"))
         )
 
         # Scroll to load more content (adjust as needed)
-        self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        time.sleep(2)  # Wait for new content to load
+        for i in range(5):
+            self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            time.sleep(2)  # Wait for new content to load
 
         # Get the page source after scrolling and waiting
         page_source = self.driver.page_source
@@ -103,7 +112,7 @@ class FacebookLogin:
         # Create a BeautifulSoup object
         soup = BeautifulSoup(page_source, 'html.parser')
 
-        # Initialize the dictionary to store scraped posts
+        # Initialize the dictionary to store scraped posts for this scrape instance (resets every scrape)
         scraped_posts = {}
 
         # Find all post containers
@@ -187,12 +196,32 @@ class FacebookLogin:
         ticket_request_obj = requests_class.TicketRequest(club,timeID,userID,buy_or_sell,quantity,price) # create a ticket_request obj 
         return ticket_request_obj
     
+
+    def parse_cached_requests(self,local_data_instance):
+        '''
+        For each item in the scraped cache, parses it into a ticket_requests object, then calls the local_data.add() method which checks for duplicates before
+        adding it into the local cache.
+
+        Args:
+        Local data instance 
+
+        Returns:
+        None
+        Prints the number of posts sent to database successfully 
+        '''
+        for index, post in self.scraped_posts.items():
+            ticket_request = self.parse_request(post)
+            if ticket_request is not None:
+                # call add method
+                if local_data_instance.add_node(ticket_request): # this should add the node to the local data structure and return true if it is a duplicate
+                    break # stop the loop if there is a duplicate
     # Usage example
 if __name__ == "__main__":
     fb_login = FacebookLogin("/Users/seanlim/Camb /walraisian/chromedriver")
-    fb_login.open_facebook("https://www.facebook.com/groups/1048169057102684/")
-    fb_login.login("robersloane129@gmail.com", "xv4VfBS5T64;Mq8")
-    
+    fb_login.open_facebook("https://www.facebook.com/groups/257070261826425/?sorting_setting=CHRONOLOGICAL")
+
+    #fb_login.login("limsean12345@gmail.com", "")
+
     fb_login.scrape_instance()
 
     print(fb_login.scraped_posts)
