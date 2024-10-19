@@ -6,6 +6,13 @@ from selenium.webdriver.support import expected_conditions as EC
 import time
 from bs4 import BeautifulSoup
 import datetime
+import re
+
+
+
+import requests_class
+import local_data
+
 class FacebookLogin:
     def __init__(self, chromedriver_path):
         # Set Chrome options to disable notifications
@@ -19,6 +26,7 @@ class FacebookLogin:
 
         self.name_class = "x1i10hfl xjbqb8w x1ejq31n xd10rxx x1sy0etr x17r0tee x972fbf xcfux6l x1qhh985 xm0m39n x9f619 x1ypdohk xt0psk2 xe8uvvx xdj266r x11i5rnm xat24cr x1mh8g0r xexx8yu x4uap5 x18d9i69 xkhd6sd x16tdsg8 x1hl2dhg xggy1nq x1a2a7pz x1sur9pj xkrqix3 xzsf02u x1s688f"
         self.post_text_class = "xdj266r x11i5rnm xat24cr x1mh8g0r x1vvkbs"
+        self.url_class = "x1i10hfl xjbqb8w x1ejq31n xd10rxx x1sy0etr x17r0tee x972fbf xcfux6l x1qhh985 xm0m39n x9f619 x1ypdohk xt0psk2 xe8uvvx xdj266r x11i5rnm xat24cr x1mh8g0r xexx8yu x4uap5 x18d9i69 xkhd6sd x16tdsg8 x1hl2dhg xggy1nq x1a2a7pz x1sur9pj xkrqix3 xzsf02u x1s688f"
     def open_facebook(self, url):
         # Open the Facebook login page
         self.driver.get(url)
@@ -105,30 +113,89 @@ class FacebookLogin:
             # Extract post information
             author_element = post.find('a', class_=self.name_class)
             text_element = post.find('div', class_=self.post_text_class)
+            author_url_element = post.find('a',class_= self.url_class)
+            
 
             # Extract text content, handling potential None values
-            author = author_element.text if author_element else "Unknown Author"
-            post_text = text_element.text if text_element else "No Text"
+            author = author_element.text if author_element else "reject"
+            post_text = text_element.text if text_element else "reject"
+            
+            if author_url_element and 'href' in author_url_element.attrs:
+                full_url = author_url_element['href']
+                url_parts = full_url.split('/')
+                user_id = next((part for part in url_parts if part.isdigit()), "reject")
+            else:
+                user_id = "No ID"
 
             # Store the extracted information in the dictionary
             scraped_posts[index] = {
                 "author": author,
-                "text": post_text,
-                "scraped time" : datetime.datetime.now(datetime.timezone.utc).isoformat()
+                "text": post_text.lower(),
+                "user_id": user_id,
+                "scraped_time" : datetime.datetime.now(datetime.timezone.utc).isoformat()
             }
 
-        # Store the scraped posts in the instance variable
+        # Store the scraped posts in the instance 
         self.scraped_posts = scraped_posts
 
         print(f"Scraping completed. {len(scraped_posts)} posts found.")
 
+    def parse_request(self,post):
+        '''
+        Parses the scraped post item in the dictionary and returns a TicketRequest object
+        If cannot be parsed, returns None
+        '''
+        if post["user_id"] != "reject":
+            userID = post["user_id"]  # set as facebook user page ID
+        else:
+            return None
+        
+        if "mash" or "frash" in post["text"]:
+            club = "mash"
+        elif "rev" or "wev" in post["text"]:
+            club = "revs"
+        elif "lola" or "kiki" in post["text"]:
+            club = "kikis"
+        elif "junction" in post["text"]:
+            club = "junction"
+        else:
+            return None
 
+        if "wtb" in post["text"]:
+            buy_or_sell = "buy"
+        elif "wts" in post["text"]:
+            buy_or_sell = "sell"
+        else:
+            return None
+        
+        # use regex to detect quantities
+        quantity_match = re.search(r'(\d+)x', post["text"])
+        if quantity:
+            quantity = int(quantity_match.group(1))  # convert _x to an int
+        else:
+            quantity = 1 # default 
+
+        # use regex to find prices
+        price_match  = re.search(r'([£$]\s*\d+(?:\.\d{1,2})?)', post["text"])  # captures anything after a $ or £
+        if price_match:
+            price = price_match.group(1)
+        else:
+            price = "market"
+
+        timeID = post["scraped_time"] 
+
+        ticket_request_obj = requests_class.TicketRequest(club,timeID,userID,buy_or_sell,quantity,price) # create a ticket_request obj 
+        return ticket_request_obj
+    
     # Usage example
 if __name__ == "__main__":
     fb_login = FacebookLogin("/Users/seanlim/Camb /walraisian/chromedriver")
     fb_login.open_facebook("https://www.facebook.com/groups/1048169057102684/")
     fb_login.login("robersloane129@gmail.com", "xv4VfBS5T64;Mq8")
+    
     fb_login.scrape_instance()
+
     print(fb_login.scraped_posts)
+
     input("Press Enter to close the browser...")
     fb_login.close_browser()
