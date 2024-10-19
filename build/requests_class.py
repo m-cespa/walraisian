@@ -1,5 +1,5 @@
 class TicketRequest:
-    def __init__(self, club, timeID, userID, buy_or_sell, status, ticket_quantity,price="market"):
+    def __init__(self, club, timeID, userID, buy_or_sell, ticket_quantity,price="market",status=True,):
         """
         Initialize a transaction object representing a user's ticket transaction.
 
@@ -10,7 +10,7 @@ class TicketRequest:
             buy_or_sell (str): Indicates whether the transaction is a 'buy' or 'sell'.
             status (bool): The current status of the transaction (True for completed, False for pending/cancelled).
             ticket_quantity (int): The number of tickets involved in the transaction.
-            price (float) : The asking/selling price of the ticket, if none, will get the market price from the resolve_price method
+            price (str or float) : The asking/selling price of the ticket, if none, will get the market price from the resolve_price method
         """
         self.club = club
         self.buy_or_sell = buy_or_sell
