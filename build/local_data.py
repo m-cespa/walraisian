@@ -44,6 +44,8 @@ class Tree:
         """
         Take a requests_class instance and load data into Tree object.
         Binary insertion to maintain entries in sorted price order. 
+
+        Should return True if a duplicate is found
         """
         read_node = ReadNode(request_instance)
         write_node = WriteNode(request_instance)
