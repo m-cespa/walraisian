@@ -18,10 +18,12 @@ class FacebookLogin:
         # Set Chrome options to disable notifications
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_argument("--disable-notifications")  # Disable notifications
+        chrome_options.add_argument("--start-maximized")
 
         # change profile path for testing 
         profile_path = "/Users/seanlim/Library/Application Support/Google/Chrome/Profile 1"
         chrome_options.add_argument(f"user-data-dir={profile_path}")
+        
 
         # Initialize the webdriver with options and open the browser
         self.service = Service(chromedriver_path)
@@ -35,9 +37,9 @@ class FacebookLogin:
         # Open the Facebook login page
         self.driver.get(url)
         self.open = True
-        # Maximize the window to fullscreen
-        self.driver.maximize_window()
 
+        # Zoom in to increase picture resolution 
+        self.driver.execute_script("document.body.style.zoom='110%'")
         # Remove the annoying banner elements
         self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
         time.sleep(2)
@@ -48,7 +50,7 @@ class FacebookLogin:
         
 
         # Locate the banner elements using XPath
-        top_banner_element = self.driver.find_element(By.XPATH, '/html/body/div[1]/div/div[1]/div/div[2]/div[4]')
+        top_banner_element = self.driver.find_element(By.XPATH, '/html/body/div[1]/div/div[1]/div/div[2]')
         bottom_banner_element = self.driver.find_element(By.XPATH, '/html/body/div[1]/div/div[1]/div/div[3]/div/div/div[1]/div[1]/div[3]')
 
         # Execute JavaScript to remove the element from the DOM
