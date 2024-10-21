@@ -1,20 +1,20 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import StaleElementReferenceException
+import cv2
+import numpy as np
 import time
 import re
 import os 
 import pytesseract
 from PIL import Image
 import csv
+import random
+
 import requests_class
 import local_data
-import random
-import cv2
-import numpy as np
+
+
 
 class FacebookLogin:
     def __init__(self, chromedriver_path):
