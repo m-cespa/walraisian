@@ -1,4 +1,14 @@
 selenium
 time
 datetime
-bs4
+typing
+cv2
+re
+os
+pytesseract
+PIL
+csv
+random
+heapq
+sqlite3
+inspect
