@@ -1,5 +1,5 @@
 class TicketRequest:
-    def __init__(self, club, timeID, userID, buy_or_sell, ticket_quantity,price="market",status=True,):
+    def __init__(self, club, timeID, userID, buy_or_sell,requestID, ticket_quantity= 1,price="market",status=True):
         """
         Initialize a transaction object representing a user's ticket transaction.
 
@@ -8,7 +8,6 @@ class TicketRequest:
             userID (str): The unique identifier for the user performing the transaction.
             club (str): The name of the club associated with the ticket transaction.
             buy_or_sell (str): Indicates whether the transaction is a 'buy' or 'sell'.
-            status (bool): The current status of the transaction (True for completed, False for pending/cancelled).
             ticket_quantity (int): The number of tickets involved in the transaction.
             price (str or float) : The asking/selling price of the ticket, if none, will get the market price from the resolve_price method
         """
@@ -16,15 +15,20 @@ class TicketRequest:
         self.buy_or_sell = buy_or_sell
         self.timeID = timeID
         self.userID = userID
-        self.status = status
         self.ticket_quantity = ticket_quantity
         self.price = self.resolve_price(price)
+        self.requestID = requestID # unique identifier for each request object, concatenated string of 
+    
+    def __repr__(self):
+        return (self.club,self.buy_or_sell,self.timeID,self.userID,self.ticket_quantity,self.price,self.requestID)
     
     def resolve_price(self,price):
         if price == "market":
             if self.buy_or_sell == "buy":
+                return "Placeholder Value"
                 NotImplementedError # implement logic for calculating the market price
             elif self.buy_or_sell == "sell":
+                return "Placeholder Value"
                 NotImplementedError # implement logic for calculating the market price
         return price
     
