@@ -10,14 +10,14 @@ import pytesseract
 from PIL import Image
 import csv
 import random
-
+from datetime import datetime,timedelta
 import requests_class
 import local_data
 
 
 
 class FacebookLogin:
-    def __init__(self, chromedriver_path):
+    def __init__(self, chromedriver_path,stored_scraped_post_ids=set()):
         # Set Chrome options to disable notifications
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_argument("--disable-notifications")  # Disable notifications
@@ -36,9 +36,9 @@ class FacebookLogin:
         # Set post class for screenshots
         self.post_class = "x1yztbdb x1n2onr6 xh8yej3 x1ja2u2z"
 
-        # # Set class for comments
-        # self.comment_class = "html-div xdj266r x11i5rnm xat24cr x1mh8g0r xexx8yu x4uap5 x18d9i69 xkhd6sd"
-    
+        # Initialise seen set 
+        self.current_set = stored_scraped_post_ids
+
     def open_facebook(self, url):
         # Open the Facebook login page
         self.driver.get(url)
@@ -70,7 +70,7 @@ class FacebookLogin:
             """, bottom_banner_element)
         
         # Scroll to Load Posts
-        for i in range(10):
+        for i in range(3):
             self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
             time.sleep(2)  # Wait for new content to load
             self.driver.execute_script("window.scrollTo(0, -100);")
@@ -177,7 +177,7 @@ class FacebookLogin:
 
         # Clean up content
         content = re.sub(r'\s+', ' ', content)  # Replace multiple spaces with single space
-        content = content.strip()
+        content = content.strip().lower()
 
         return {
             "username": username,
@@ -200,6 +200,7 @@ class FacebookLogin:
             print(f"No image files found in '{folder_path}'.")
             return
 
+        current_time = datetime.now()
         for image_file in image_files:
             image_path = os.path.join(folder_path, image_file)
             print(f"Processing {image_file}...")
@@ -208,9 +209,104 @@ class FacebookLogin:
                 print(f"Username: {info['username']}")
                 print(f"Time Line: {info['time_line']}")
                 print(f"Content: {info['content']}")
+
+                # parse data if invalid skip it
+                if info['username'] and info['time_line'] and info["content"]:
+                    UserID = info['username']
+                    
+                    # Regex pattern for matching time
+                    pattern = r'(?P<days>\d+)\s*days\s*ago|(?:a\s*day\s*ago|aday\s*ago)|(?P<hours>\d+)\s*hours\s*ago|(?P<minutes>\d+)\s*minutes\s*ago|(?P<minutesShort>\d+)m\s*-\s*®|(?:about\s*an\s*hour\s*ago)'
+                    
+                    # Search for time patterns
+                    time_match = re.search(pattern, info['time_line'])
+                    
+                    if time_match:
+                        # Initialize a timedelta object
+                        time_delta = timedelta()
+
+                        # Calculate the time difference based on matched groups
+                        if time_match.group("days"):
+                            days = int(time_match.group("days"))
+                            time_delta += timedelta(days=days)
+                        elif 'aday' in info['time_line']:
+                            time_delta += timedelta(days=1)  # Treat "aday" as 1 day
+
+                        if time_match.group("hours"):
+                            hours = int(time_match.group("hours"))
+                            time_delta += timedelta(hours=hours)
+
+                        if time_match.group("minutes"):
+                            minutes = int(time_match.group("minutes"))
+                            time_delta += timedelta(minutes=minutes)
+                        elif time_match.group("minutesShort"):
+                            minutes_short = int(time_match.group("minutesShort"))
+                            time_delta += timedelta(minutes=minutes_short)
+
+                        # Handle "about an hour ago"
+                        if 'about an hour ago' in info['time_line']:
+                            time_delta += timedelta(hours=1)
+
+                        # Calculate the post time by subtracting the time delta from current time
+                        post_time = current_time - time_delta
+                        
+                        # Display the post time in a readable format
+                        print(f"User: {UserID}, Posted at: {post_time.strftime('%Y-%m-%d %H:%M:%S')}, Content: {info['content']}")
+                    else:
+                        continue
+
+                    # create unique requestID 
+                    requestID = UserID.replace(" ", "") + info["content"][:8]
+                    
+                    # check if requestID is in the set
+                    if requestID in self.current_set:
+                        continue
+
+                    # Process content
+                    if "mash" or "frash" in info["content"]:
+                        club = "mash"
+                    elif "rev" or "wev" in info["content"]:
+                        club = "revs"
+                    elif "lola" or "kiki" in info["content"]:
+                        club = "kikis"
+                    elif "junction" in info["content"]:
+                        club = "junction"
+                    else:
+                        return None
+
+                    if "wtb" in info["content"]:
+                        buy_or_sell = "buy"
+                    elif "wts" in info["content"]:
+                        buy_or_sell = "sell"
+                    else:
+                        return None
+                    
+                    # use regex to detect quantities
+                    quantity_match = re.search(r'(\d+)x', info["content"])
+                    if quantity:
+                        quantity = int(quantity_match.group(1))  # convert _x to an int
+                    else:
+                        quantity = 1 # default 
+
+                    # use regex to find prices
+                    price_match  = re.search(r'([£$]\s*\d+(?:\.\d{1,2})?)', info["content"])  # captures anything after a $ or £
+                    if price_match:
+                        price = price_match.group(1)
+                    else:
+                        price = "market"
+
+                    # create request object
+                    
+                else:
+                    continue
+
+
+
             except Exception as e:
                 print(f"Error processing {image_file}: {str(e)}")
             print("-" * 50)
+        
+        
+
 
 
 
